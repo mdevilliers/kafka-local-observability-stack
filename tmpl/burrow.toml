@@ -1,0 +1,36 @@
+[zookeeper]
+servers= [ "$ZK_BROKERS_2181_1", "$ZK_BROKERS_2181_2", "$ZK_BROKERS_2181_3" ]
+timeout=6
+root-path="/burrow"
+
+[client-profile.profile]
+kafka-version="0.11.0"
+client-id="docker-client"
+
+[consumer.local]
+client-profile="profile"
+class-name="kafka"
+cluster="local"
+servers=["$KAFKA_BROKERS_9092_1", "$KAFKA_BROKERS_9092_2", "$KAFKA_BROKERS_9092_3"  ]
+group-denylist="^(console-consumer-|python-kafka-consumer-|quick-).*$"
+group-allowlist=""
+
+[cluster.local]
+client-profile="profile"
+class-name="kafka"
+servers= [ "$KAFKA_BROKERS_9092_1", "$KAFKA_BROKERS_9092_2", "$KAFKA_BROKERS_9092_3" ]
+topic-refresh=60
+offset-refresh=30
+groups-reaper-refresh=30
+
+[consumer.local_zk]
+class-name="kafka_zk"
+cluster="local"
+servers= [ "$ZK_BROKERS_2181_1", "$ZK_BROKERS_2181_2", "$ZK_BROKERS_2181_3" ]
+zookeeper-path="/local"
+zookeeper-timeout=30
+group-denylist="^(console-consumer-|python-kafka-consumer-).*$"
+group-allowlist=""
+
+[httpserver.default]
+address=":8000"

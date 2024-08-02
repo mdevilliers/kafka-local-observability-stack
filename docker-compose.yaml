@@ -1,0 +1,51 @@
+version: '3'
+
+services:
+  burrow:
+    image: ghcr.io/linkedin/burrow/burrow:v1.8.0
+    volumes:
+      - ${PWD}/.:/etc/burrow/
+    ports:
+      - "8000:8000"
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus.yaml
+    entrypoint:
+      - /bin/prometheus
+      - --config.file=/etc/prometheus.yaml
+    ports:
+      - "9090:9090"
+    user: root
+  kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.2
+    hostname: kafka-ui
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: PLAINTEXT://${KAFKA_BROKERS_9092_1},${KAFKA_BROKERS_9092_2},${KAFKA_BROKERS_9092_3}
+  kafka-minion:
+    image: redpandadata/kminion:latest
+    ports:
+      - 8081:8081
+    environment:
+      KAFKA_BROKERS: "${KAFKA_BROKERS_9092_1},${KAFKA_BROKERS_9092_2},${KAFKA_BROKERS_9092_3}"
+      EXPORTER_PORT: 8081
+    restart: unless-stopped
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    user: root
+    depends_on:
+      - prometheus
+    ports:
+      - 3000:3000
+    volumes:
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+      - ./dashboards:/etc/grafana/dashboards
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    restart: always 
